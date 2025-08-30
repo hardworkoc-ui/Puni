@@ -264,7 +264,19 @@
       }
       updateUI();
     }
-
+    function markWin() {
+  const today = new Date().toISOString().split("T")[0];
+  if (!calendarData[today]) {
+    calendarData[today] = "success";
+    streakDays = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+    xp = streakDays * 10;
+    saveProgress();
+    alert("✅ Today marked as a win!");
+  } else {
+    alert("⚠️ You’ve already marked today as a win!");
+  }
+  updateUI();
+  }
     function resetStreak() {
       if (confirm("Reset streak?")) {
         startDate = new Date();
