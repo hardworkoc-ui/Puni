@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🔥 Duolingo Style Streak Tracker 🔥</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+    #xp, #streak, #daily-rank {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+    #quote {
+      font-size: 1rem;
+      font-style: italic;
+      margin: 20px auto;
+      max-width: 600px;
+      padding: 15px;
+      background: #1e293b;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin: 20px auto;
+      max-width: 350px;
+    }
+    .day {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .day.success { background: #16a34a; }
+    .day.fail { background: #dc2626; }
+    .day.today { border: 2px solid #facc15; }
+    .btn {
+      margin: 8px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .danger { background: #dc2626; color: #fff; }
+    .success { background: #16a34a; color: #fff; }
+    .save { background: #2563eb; color: #fff; }
+    .panic { background: #f59e0b; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>🔥 Streak Journey 🔥</h1>
+  <div id="xp">XP: 0</div>
+  <div id="streak">Streak: 0 days</div>
+  <div id="daily-rank"></div>
+  <div id="calendar"></div>
+  <div id="quote"></div>
+
+  <div id="controls">
+    <button class="btn success" onclick="markWin()">✅ Mark Today Win</button>
+    <button class="btn save" onclick="saveProgress()">💾 Save</button>
+    <button class="btn danger" onclick="resetStreak()">⏮ Reset</button>
+    <button class="btn panic" onclick="panicQuote()">⚡ Panic Quote</button>
+  </div>
+
+  <script>
+    // === Config: Initial Start Date ===
+    const DEFAULT_START_ISO = "2025-08-17T00:02:00+05:30"; // IST
+
+    // === Motivational Quotes ===
+    const QUOTES = [
+      "Don’t break now, you’ve come too far.",
+      "One bad choice = back to zero.",
+      "This urge will fade. Regret won’t.",
+      "You’re stronger than this feeling.",
+      "Do the hard thing, win the war.",
+      "Control yourself, or be controlled.",
+      "Comfort now, suffering later.",
+      "Stop. Breathe. Win.",
+      "Future you is begging you — don’t fail him.",
+      "Weak men chase urges. Strong men kill them.",
+      "Nothing good comes from giving in.",
+      "Temporary high, permanent setback.",
+      "Every urge resisted = new strength gained.",
+      "Prove yourself right. Prove urges wrong.",
+      "The chain grows stronger with this choice.",
+      "You’re not your urges. You’re your actions.",
+      "Decide once, not every time.",
+      "Break free, don’t break down.",
+      "This is the test. Pass it.",
+      "Urge = trap. Don’t fall.",
+      "Easy now = hard forever.",
+      "Hard now = easy later.",
+      "The strongest man is the one who conquers himself.",
+      "Remember the regret — never again.",
+      "Win today, repeat tomorrow.",
+      "You’re better than this moment of weakness.",
+      "You’ll hate yourself if you give in.",
+      "Don’t be your own enemy.",
+      "The pain of discipline beats the pain of regret.",
+      "Control your mind, own your life.",
+      "This is not who you are.",
+      "Stay the course. Don’t reset.",
+      "The urge is lying to you.",
+      "Strength is built in silence.",
+      "You’ve fought harder battles.",
+      "Don’t let a cheap thrill steal your progress.",
+      "Urges come and go — your choice stays forever.",
+      "Be the man you promised to be.",
+      "One urge resisted = one step closer to freedom.",
+      "You’re rewriting your story right now.",
+      "Stop feeding the weakness. Feed the strength.",
+      "If you quit now, you’ll regret it in minutes.",
+      "You’ve got more control than you think.",
+      "Discipline = freedom.",
+      "Don’t lose everything for nothing.",
+      "Prove them wrong, prove yourself right.",
+      "Short pleasure, long pain.",
+      "You don’t need this. You need control.",
+      "Survive this urge and you win the day.",
+      "This is your moment to rise.",
+      "If you lose now, you’ll hate yourself tomorrow.",
+      "Strong men build, weak men waste.",
+      "Urges are lies wrapped in pleasure. Don’t fall.",
+      "Don’t be a slave to your own hands.",
+      "Every “just once” becomes every day.",
+      "The price of weakness is freedom lost.",
+      "Quitting now = choosing failure.",
+      "Real power is saying NO.",
+      "You’ll never respect yourself if you give in.",
+      "Victory isn’t in pleasure, it’s in restraint.",
+      "Freedom starts with control.",
+      "The urge is temporary; strength is forever.",
+      "You’re building a legacy, not chasing a craving.",
+      "You’re too strong to be tricked by seconds of pleasure.",
+      "Weakness today ruins tomorrow’s strength.",
+      "Real men master themselves.",
+      "Choose control, not chaos.",
+      "Don’t let a moment steal your mission.",
+      "You don’t need release. You need resolve.",
+      "Every “no” you say makes the next “no” easier.",
+      "Remember the disgust after giving in.",
+      "Urges feed the past, not your future.",
+      "You’re breaking chains every time you resist.",
+      "Don’t be your own downfall.",
+      "Every slip restarts the suffering.",
+      "Control is the highest form of strength.",
+      "The urge will beg. Don’t listen.",
+      "Regret screams louder than urges.",
+      "Be the exception, not the average.",
+      "Discipline is the proof of greatness.",
+      "Pleasure is cheap. Power is priceless.",
+      "Urges are traps designed to waste you.",
+      "Don’t trade your crown for crumbs.",
+      "Every win adds a brick to your fortress.",
+      "You weren’t born to be weak.",
+      "Stand tall, don’t fall.",
+      "Urges want you small; strength makes you great.",
+      "Every resistance is training for life.",
+      "You’re carving a new man out of this pain.",
+      "Don’t betray yourself for seconds of nothing.",
+      "Self-control is the ultimate flex.",
+      "Choose victory, not defeat.",
+      "You’re proving to yourself what you’re made of.",
+      "Don’t reset. Rewrite.",
+      "Every loss hurts more than the urge itself.",
+      "Real freedom is not needing the escape.",
+      "Urges don’t own you. You own them.",
+      "Resist now, rejoice later.",
+      "Stop letting the weak version of you win.",
+      "This fight defines you. Win it.",
+      "Discipline is choosing what you want most over what you want now.",
+      "Pain is weakness leaving the body.",
+      "Do today what others won’t, so tomorrow you can do what others can’t.",
+      "You suffer more in imagination than in reality.",
+      "The man who masters himself is greater than the man who conquers a thousand men in battle.",
+      "Easy choices, hard life. Hard choices, easy life.",
+      "If you hate starting over, stop giving up.",
+      "A man who cannot command himself will always be a slave.",
+      "Do not pray for an easy life. Pray for the strength to endure a difficult one.",
+      "You will never always be motivated, so you must learn to be disciplined.",
+      "The chains of habit are too weak to be felt until they are too strong to be broken.",
+      "One who conquers himself is the mightiest warrior.",
+      "Suffer the pain of discipline or suffer the pain of regret.",
+      "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+      "Cowards never start. The weak never finish. Winners never quit.",
+      "He who has a why to live can bear almost any how.",
+      "Stop letting your comfort zone become your coffin.",
+      "You’ll never know your limits until you push yourself to them.",
+      "Your mind will quit a thousand times before your body does. Don’t listen to it.",
+      "The man who loves walking will walk further than the man who loves the destination.",
+      "Fall down seven times, stand up eight.",
+      "The best way out is always through.",
+      "Don’t count the days. Make the days count.",
+      "The wolf on the hill is not as hungry as the wolf climbing the hill.",
+      "The secret of your future is hidden in your daily routine.",
+      "When you feel like quitting, remember why you started.",
+      "Comfort is the enemy of progress.",
+      "You’ll never regret being disciplined. You’ll always regret being weak.",
+      "Nobody cares, work harder.",
+      "Your excuses will never lift the weight, run the mile, or build the life you want."
+    ];
+
+    // === Daily Ranks ===
+    const DAILY_RANKS = [
+      { day: 1,  name: "Beginner",     emoji: "🔰" },
+      { day: 2,  name: "Climber",      emoji: "🧗" },
+      { day: 3,  name: "Challenger",   emoji: "⚡" },
+      { day: 4,  name: "Achiever",     emoji: "💡" },
+      { day: 5,  name: "Focused",      emoji: "🎯" },
+      { day: 6,  name: "Disciplined",  emoji: "🛡️" },
+      { day: 7,  name: "Champion",     emoji: "🏆" },
+      { day: 10, name: "Rising Star",  emoji: "🌟" },
+      { day: 15, name: "Fearless",     emoji: "🔥" },
+      { day: 20, name: "Gladiator",    emoji: "⚔️" },
+      { day: 30, name: "Unstoppable",  emoji: "🚀" },
+      { day: 50, name: "Legend",       emoji: "👑" },
+      { day: 100,name: "Immortal",     emoji: "💠" }
+    ];
+
+    // === State ===
+    let startDate = new Date(localStorage.getItem("streakStart") || DEFAULT_START_ISO);
+    let streakDays = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+    let xp = streakDays * 10;
+    let calendarData = JSON.parse(localStorage.getItem("calendarData")) || {};
+
+    function getDailyRank(days) {
+      let current = DAILY_RANKS[0];
+      for (let rank of DAILY_RANKS) {
+        if (days >= rank.day) current = rank;
+      }
+      return current;
+    }
+
+    function getRandomQuote() {
+      return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    }
+
+    function markWin() {
+      const today = new Date().toISOString().split("T")[0];
+      if (!calendarData[today]) {
+        calendarData[today] = "success";
+        streakDays = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+        xp = streakDays * 10;
+        saveProgress();
+      }
+      updateUI();
+    }
+
+    function resetStreak() {
+      if (confirm("Reset streak?")) {
+        startDate = new Date();
+        streakDays = 0;
+        xp = 0;
+        calendarData = {};
+        localStorage.setItem("streakStart", startDate.toISOString());
+        saveProgress();
+        updateUI();
+      }
+    }
+
+    function saveProgress() {
+      localStorage.setItem("streakStart", startDate.toISOString());
+      localStorage.setItem("xp", xp);
+      localStorage.setItem("streakDays", streakDays);
+      localStorage.setItem("calendarData", JSON.stringify(calendarData));
+      alert("Progress saved ✅");
+    }
+
+    function renderCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      let html = "";
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        let classes = "day";
+        if (calendarData[dateKey] === "success") classes += " success";
+        if (dateKey === now.toISOString().split("T")[0]) classes += " today";
+        html += `<div class="${classes}">${d}</div>`;
+      }
+      document.getElementById("calendar").innerHTML = html;
+    }
+
+    function panicQuote() {
+      document.getElementById("quote").textContent = getRandomQuote();
+    }
+
+    function updateUI() {
+      const dailyRank = getDailyRank(streakDays);
+      document.getElementById("xp").textContent = `⭐ XP: ${xp}`;
+      document.getElementById("streak").textContent = `🔥 Streak: ${streakDays} days`;
+      document.getElementById("daily-rank").textContent = `${dailyRank.emoji} Rank: ${dailyRank.name}`;
+      renderCalendar();
+    }
+
+    // === Init ===
+    updateUI();
+    // Set an initial quote only once at load
+    document.getElementById("quote").textContent = getRandomQuote();
+  </script>
+</body>
+</html>
