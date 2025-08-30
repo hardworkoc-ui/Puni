@@ -80,7 +80,11 @@
     <button class="btn danger" onclick="resetStreak()">⏮ Reset</button>
     <button class="btn panic" onclick="panicQuote()">⚡ Panic Quote</button>
   </div>
-
+  const DEFAULT_START_ISO = "2025-08-17T00:02:00+05:30"; // your initial day/time
+  let startDate = new Date(localStorage.getItem("streakStart") || DEFAULT_START_ISO);
+  let streakDays = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+  let xp = streakDays * 10; // 10 XP per day from the beginning
+  let calendarData = JSON.parse(localStorage.getItem("calendarData")) || {};
   <script>
     // === Motivational Quotes ===
     const QUOTES = [
